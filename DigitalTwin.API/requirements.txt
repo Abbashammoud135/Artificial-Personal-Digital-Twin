@@ -1,0 +1,12 @@
+fastapi 
+uvicorn 
+langchain 
+langchain-community 
+pydantic 
+pdfplumber 
+pymupdf
+pymongo 
+motor
+sqlalchemy 
+pyodbc
+redis
