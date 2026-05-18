@@ -1,0 +1,20 @@
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+import os
+
+# Load .env variables
+load_dotenv()
+
+_llm = None
+
+def get_llm():
+    global _llm
+
+    if _llm is None:
+        _llm = ChatGroq(
+            groq_api_key=os.getenv("GROQ_API_KEY"),
+            model="llama-3.1-8b-instant",
+            temperature=0.3
+        )
+
+    return _llm

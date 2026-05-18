@@ -28,6 +28,11 @@ def get_health_profile_service(request: Request):
 def get_auth_service(request: Request):
     return request.app.state.auth_service
 
+def get_medical_repo(request: Request):
+    return request.app.state.medical_repo
+
+def get_storage_service(request: Request):
+    return request.app.state.storage_service
 
 def get_db() -> Session:
     """Dependency injection for database sessions in endpoints"""

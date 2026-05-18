@@ -7,7 +7,8 @@ from database.sqlserver.connection import sql_db
 from database.redis.connection import redis_db
 
 from api.v1.endpoints.auth import router as auth_router
-from api.v1.endpoints.health_profile import router as health_profile_router
+from api.v1.endpoints.health.health_profile import router as health_profile_router
+from api.v1.endpoints.health.health_docs import router as health_router
 
 from database.sqlserver.repositories.user_repo import UserRepository
 from services.auth_service import AuthService
@@ -16,6 +17,10 @@ from seeds.role_seeds import seed_roles
 
 from services.health_profile_service import HealthProfileService
 from database.sqlserver.repositories.health_profile_repo import HealthProfileRepository
+
+from database.mongo.repositories.medical_repo import MedicalRepository
+from services.storage_service import StorageService
+
 import os
 # auth_service = None
 # health_profile_service = None
@@ -61,9 +66,15 @@ async def lifespan(app: FastAPI):
         health_profile_repo = HealthProfileRepository(session)
         health_profile_service = HealthProfileService(health_profile_repo)
         
+        medical_repo = MedicalRepository()
+        storage_service = StorageService(medical_repo)
+        
         # 📌 attach to FastAPI app 
         app.state.auth_service = auth_service
         app.state.health_profile_service = health_profile_service
+        
+        app.state.medical_repo = medical_repo
+        app.state.storage_service = storage_service
 
         app.state.db_session = session
         
@@ -101,3 +112,4 @@ app = FastAPI(
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(health_profile_router, prefix="/health-profile", tags=["Health Profile"])
+app.include_router(health_router, prefix="/health-docs", tags=["Health Data"])

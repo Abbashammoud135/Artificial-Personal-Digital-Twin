@@ -10,7 +10,7 @@ class MongoClient:
         uri = os.getenv("MONGO_URI")
 
         self.client = AsyncIOMotorClient(uri)
-        self.db = self.client.get_database("MONGO_URI")
+        self.db = self.client.get_default_database()
 
         print("✅ MongoDB connected")
 

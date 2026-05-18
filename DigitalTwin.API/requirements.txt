@@ -10,3 +10,11 @@ motor
 sqlalchemy 
 pyodbc
 redis
+python-multipart
+sentence-transformers
+faiss-cpu
+langchain-ollama
+google-genai
+langchain-groq
+python-dotenv
+uvicorn main:app --reload

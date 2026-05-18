@@ -10,26 +10,26 @@ router = APIRouter()
 
 
 @router.get("/", response_model=HealthProfileResponse)
-def get_profile(
+async def get_profile(
     user=Depends(get_current_user),
     service=Depends(get_health_profile_service)
 ):
-    return service.get_profile(user["user_id"])
+    return await service.get_profile(user["user_id"])
 
 
 @router.post("/", response_model=HealthProfileResponse)
-def create_profile(
+async def create_profile(
     data: HealthProfileCreate,
     user=Depends(get_current_user),
     service=Depends(get_health_profile_service)
 ):
-    return service.create_profile(user["user_id"], data)
+    return await service.create_profile(user["user_id"], data)
 
 
 @router.put("/", response_model=HealthProfileResponse)
-def update_profile(
+async def update_profile(
     data: HealthProfileUpdate,
     user=Depends(get_current_user),
     service=Depends(get_health_profile_service)
 ):
-    return service.update_profile(user["user_id"], data)
+    return await service.update_profile(user["user_id"], data)
