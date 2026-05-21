@@ -10,6 +10,7 @@ class MedicalDocumentResponse(BaseModel):
     file_url: str
     upload_time: datetime
     status: str
+    analysis: Optional[dict] = None
 
     class Config:
         from_attributes = True

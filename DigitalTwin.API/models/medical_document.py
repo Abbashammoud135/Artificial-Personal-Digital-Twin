@@ -10,7 +10,8 @@ class MedicalDocument:
         file_type: str,
         file_url: str,
         file_id: str = None,
-        status: str = "uploaded"
+        status: str = "uploaded",
+        analysis: dict | None = None
     ):
         self.file_id = file_id if file_id else str(uuid.uuid4())
         self.user_id = user_id
@@ -18,6 +19,7 @@ class MedicalDocument:
         self.file_url = file_url
         self.upload_time = datetime.now(timezone.utc)
         self.status = status
+        self.analysis = analysis
 
     def to_dict(self):
         return {
@@ -26,5 +28,6 @@ class MedicalDocument:
             "file_type": self.file_type,
             "file_url": self.file_url,
             "upload_time": self.upload_time,
-            "status": self.status
+            "status": self.status,
+            "analysis": self.analysis
         }

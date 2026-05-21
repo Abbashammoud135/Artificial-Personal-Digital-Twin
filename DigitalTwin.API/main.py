@@ -9,9 +9,12 @@ from database.redis.connection import redis_db
 from api.v1.endpoints.auth import router as auth_router
 from api.v1.endpoints.health.health_profile import router as health_profile_router
 from api.v1.endpoints.health.health_docs import router as health_router
+from api.v1.endpoints.health.trends import router as trends_router
 
 from database.sqlserver.repositories.user_repo import UserRepository
 from services.auth_service import AuthService
+
+from services.Health_trend_service import TrendService
 
 from seeds.role_seeds import seed_roles
 
@@ -19,7 +22,10 @@ from services.health_profile_service import HealthProfileService
 from database.sqlserver.repositories.health_profile_repo import HealthProfileRepository
 
 from database.mongo.repositories.medical_repo import MedicalRepository
+from database.mongo.repositories.agent_repo import AgentRepository
 from services.storage_service import StorageService
+from core.rag.knowledge_base import KnowledgeBase
+from api.v1.endpoints.health.health_agent import router as health_agent_router
 
 import os
 # auth_service = None
@@ -68,17 +74,26 @@ async def lifespan(app: FastAPI):
         
         medical_repo = MedicalRepository()
         storage_service = StorageService(medical_repo)
-        
+        trend_service = TrendService(medical_repo)
         # 📌 attach to FastAPI app 
         app.state.auth_service = auth_service
         app.state.health_profile_service = health_profile_service
         
+        app.state.trend_service = trend_service
+        
         app.state.medical_repo = medical_repo
         app.state.storage_service = storage_service
 
+        agent_repo = AgentRepository()
+        rag_service = KnowledgeBase()
+        rag_service.initialize()
+
+        app.state.agent_repo = agent_repo
+        app.state.rag_service = rag_service
         app.state.db_session = session
         
         print("🔐 Auth service initialized")
+        print("🧠 Health agent and RAG knowledge base initialized")
         
         # 🌱 SEED ROLES
         seed_roles(session)
@@ -113,3 +128,5 @@ app = FastAPI(
 app.include_router(auth_router, prefix="/auth")
 app.include_router(health_profile_router, prefix="/health-profile", tags=["Health Profile"])
 app.include_router(health_router, prefix="/health-docs", tags=["Health Data"])
+app.include_router(health_agent_router, prefix="/health-agent", tags=["Health Agent"])
+app.include_router(trends_router, prefix="/health-trends", tags=["Health Trends"])

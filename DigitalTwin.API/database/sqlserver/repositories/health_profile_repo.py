@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from models.health_profile import HealthProfile
 import uuid
 
@@ -14,15 +15,23 @@ class HealthProfileRepository:
         ).first()
 
     def create(self, profile: HealthProfile):
-        self.db.add(profile)
-        self.db.commit()
-        self.db.refresh(profile)
-        return profile
+        try:
+            self.db.add(profile)
+            self.db.commit()
+            self.db.refresh(profile)
+            return profile
+        except SQLAlchemyError:
+            self.db.rollback()
+            raise
 
     def update(self, db_profile: HealthProfile, updates: dict):
         for key, value in updates.items():
             setattr(db_profile, key, value)
 
-        self.db.commit()
-        self.db.refresh(db_profile)
-        return db_profile
+        try:
+            self.db.commit()
+            self.db.refresh(db_profile)
+            return db_profile
+        except SQLAlchemyError:
+            self.db.rollback()
+            raise

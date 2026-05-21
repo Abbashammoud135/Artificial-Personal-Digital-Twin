@@ -28,10 +28,10 @@ class PDFTool:
         if not any(pages):  # if all pages empty
             pages = []
             try:
-                doc = fitz.open(file_path)
-                for page in doc:
-                    text = page.get_text() or ""
-                    pages.append(text.strip())
+                with fitz.open(file_path) as doc:
+                    for page in doc:
+                        text = page.get_text() or ""
+                        pages.append(text.strip())
             except Exception as e:
                 print(f"PyMuPDF failed: {e}")
 

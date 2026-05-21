@@ -5,6 +5,7 @@ from fastapi import Request
 from sqlalchemy.orm import Session
 from database.sqlserver.connection import sql_db
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from database.mongo.repositories.agent_repo import AgentRepository
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login",scheme_name="BearerAuth")
 bearer_scheme = HTTPBearer()
@@ -24,6 +25,8 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Depends(bearer_scheme
 def get_health_profile_service(request: Request):
     return request.app.state.health_profile_service
 
+def get_trend_service(request: Request):
+    return request.app.state.trend_service
 
 def get_auth_service(request: Request):
     return request.app.state.auth_service
@@ -33,6 +36,15 @@ def get_medical_repo(request: Request):
 
 def get_storage_service(request: Request):
     return request.app.state.storage_service
+
+
+def get_agent_repo(request: Request) -> AgentRepository:
+    return request.app.state.agent_repo
+
+
+def get_rag_service(request: Request):
+    return request.app.state.rag_service
+
 
 def get_db() -> Session:
     """Dependency injection for database sessions in endpoints"""

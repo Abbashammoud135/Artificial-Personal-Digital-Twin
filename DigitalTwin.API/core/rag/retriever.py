@@ -7,11 +7,11 @@ class Retriever:
         self.vector_store = vector_store
 
     def retrieve(self, query: str, k=5):
-        if self.vector_store.index.ntotal == 0:
-                return []
-        print("FAISS vectors:", self.vector_store.index.ntotal)
-        print("Metadata size:", len(self.vector_store.metadata))
-        
-        query_vec = self.embedder.embed([query])[0]
+        if self.vector_store.vectors.size == 0:
+            return []
 
+        print("VectorStore vectors:", self.vector_store.vectors.shape)
+        print("Metadata size:", len(self.vector_store.metadata))
+
+        query_vec = self.embedder.embed([query])[0]
         return self.vector_store.search(query_vec, k)
