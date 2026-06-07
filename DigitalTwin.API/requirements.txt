@@ -2,6 +2,7 @@ fastapi
 uvicorn
 langchain
 langchain-community
+langgraph
 pydantic
 pdfplumber
 pymupdf

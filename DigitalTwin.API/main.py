@@ -10,6 +10,7 @@ from api.v1.endpoints.auth import router as auth_router
 from api.v1.endpoints.health.health_profile import router as health_profile_router
 from api.v1.endpoints.health.health_docs import router as health_router
 from api.v1.endpoints.health.trends import router as trends_router
+from api.v1.endpoints.planner import router as planner_router
 
 from database.sqlserver.repositories.user_repo import UserRepository
 from services.auth_service import AuthService
@@ -130,3 +131,4 @@ app.include_router(health_profile_router, prefix="/health-profile", tags=["Healt
 app.include_router(health_router, prefix="/health-docs", tags=["Health Data"])
 app.include_router(health_agent_router, prefix="/health-agent", tags=["Health Agent"])
 app.include_router(trends_router, prefix="/health-trends", tags=["Health Trends"])
+app.include_router(planner_router, prefix="/api/v1", tags=["Planner"])
