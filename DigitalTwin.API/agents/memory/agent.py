@@ -1,85 +1,68 @@
 import json
 import re
-
 from agents.memory.prompts import MONGO_PROMPT
 from core.llm.groq_llama_client import get_llm
+from database.mongo.repositories.memory_repo import MemoryRepository
 
 
 class MemoryAgent:
-    """
-    Converts Natural Language → MongoDB Query (Digital Twin Memory Layer)
-    """
 
     def __init__(self):
-        # initialize LLM once
         self.llm = get_llm()
+        self.repo = MemoryRepository()
 
-    def nl_to_mongo(self, user_request: str) -> str:
-        """
-        Main pipeline: NL → MongoDB query
-        """
+    async def generate_query(self, user_request: str):
 
-        # 1. Format prompt
-        prompt = MONGO_PROMPT.format(input=user_request)
-
-        # 2. Call LLM (LangChain-style or wrapper)
+        prompt = MONGO_PROMPT.replace(
+            "<<USER_REQUEST>>",
+            user_request
+        )
         response = self.llm.invoke(prompt)
 
-        # 3. Extract raw text
         response_text = (
-            response.content if hasattr(response, "content")
+            response.content
+            if hasattr(response, "content")
             else str(response)
         )
+        print("🧠 LLM Response text:", response_text)
 
-        # 4. Extract MongoDB query safely
-        mongo_query = self._extract_mongo_query(response_text)
+        return self.safe_parse_json(response_text)
 
-        # 5. Validate query
-        # self._validate_query(mongo_query)
+    async def query_memory(self, user_request: str):
 
-        return mongo_query
+        query = await self.generate_query(
+            user_request
+        )
+        # print("🧠 Generated MongoDB Query:", query)
 
-    # -----------------------------
-    # EXTRACTION
-    # -----------------------------
-    def _extract_mongo_query(self, text: str) -> str:
-        """
-        Extract db.medical_documents query from LLM output
-        """
+        results = await self.repo.search(
+            query
+        )
 
-        if not text:
-            return ""
+        return {
+            "query": query,
+            "results": results
+        }
 
-        # remove markdown formatting
-        text = text.replace("```js", "").replace("```", "").strip()
 
-        # Try to extract only MongoDB query block
-        match = re.search(r"(db\.medical_documents\..+)", text)
+    def safe_parse_json(self, text: str):
 
-        if match:
-            return match.group(1).strip()
+        # remove markdown
+        text = re.sub(r"```json|```", "", text).strip()
 
-        # fallback: return cleaned text
-        return text
+        # replace Mongo ISODate → string
+        text = re.sub(
+            r'ISODate\("([^"]+)"\)',
+            r'"\1"',
+            text
+        )
 
-    # -----------------------------
-    # VALIDATION
-    # -----------------------------
-    def _validate_query(self, query: str):
-        """
-        Safety + schema validation
-        """
+        start = text.find("{")
+        end = text.rfind("}") + 1
 
-        if not query:
-            raise ValueError("Empty MongoDB query generated")
+        if start == -1 or end == 0:
+            raise ValueError("No JSON found")
 
-        # must target correct collection
-        if "db.medical_documents" not in query:
-            raise ValueError("Invalid collection in query")
+        cleaned = text[start:end]
 
-        # block dangerous operations
-        dangerous_ops = ["drop", "delete", "update", "remove", "insert"]
-        if any(op in query.lower() for op in dangerous_ops):
-            raise ValueError("Dangerous MongoDB operation blocked")
-
-        return True
+        return json.loads(cleaned)

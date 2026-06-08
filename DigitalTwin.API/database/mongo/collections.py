@@ -17,3 +17,10 @@ class Collections:
     
     # 💰 Finance 
     FINANCE_MEMORY = "finance_memory"
+
+    # ⚙️ Actions
+    ACTION_CALENDAR_EVENTS = "action_calendar_events"
+    ACTION_SENT_EMAILS = "action_sent_emails"
+    ACTION_EMAIL_DRAFTS = "action_email_drafts"
+    ACTION_STYLE_PROFILES = "action_style_profiles"
+    ACTION_NOTIFICATIONS = "action_notifications"
