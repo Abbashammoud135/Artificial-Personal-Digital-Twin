@@ -1,4 +1,6 @@
+from datetime import datetime
 from database.mongo.connection import mongo
+from database.mongo.collections import Collections
 
 class MemoryRepository:
 
@@ -10,24 +12,45 @@ class MemoryRepository:
 
         collection = self.db[query["collection"]]
 
-        # Step 1: build cursor
-        cursor = collection.find(query.get("filter", {}))
+        # STEP 1: extract query parts
+        filter_query = query.get("filter", {})
+        projection = query.get("projection", None)
 
-        # Step 2: sort (if exists)
+        # STEP 2: build cursor (NOW WITH PROJECTION FIX)
+        cursor = collection.find(filter_query, projection)
+
+        # STEP 3: sort (if exists)
         if query.get("sort"):
             field, direction = next(iter(query["sort"].items()))
             cursor = cursor.sort(field, direction)
 
-        # Step 3: limit (if exists)
-        if query.get("limit"):
-            cursor = cursor.limit(query["limit"])
+        # STEP 4: limit (if exists)
+        limit = query.get("limit")
+        if limit:
+            cursor = cursor.limit(limit)
 
-        # Step 4: fetch results (Motor async)
-        docs = await cursor.to_list(length=query.get("limit", 100))
+        # STEP 5: fetch results (Motor async)
+        docs = await cursor.to_list(length=limit or 100)
+
         print(f"✅ MemoryRepository.search - Found {len(docs)} documents")
 
-        # Step 5: sanitize safely
+        # STEP 6: sanitize safely
         return [self._sanitize_document(doc) for doc in docs]
+
+    async def save_memory(self, user_id: str, memory_content: dict):
+        print(f"💾 Saving memory insight to collection '{Collections.USERS_MEMORY}' for user '{user_id}'")
+        collection = self.db[Collections.USERS_MEMORY]
+        doc = {
+            "user_id": user_id,
+            "content": memory_content,
+            "created_at": datetime.utcnow()
+        }
+        await collection.insert_one(doc)
+        
+        # Convert _id to string for serialization safety
+        if "_id" in doc:
+            doc["_id"] = str(doc["_id"])
+        return doc
 
     def _sanitize_document(self, doc):
         if not doc:
