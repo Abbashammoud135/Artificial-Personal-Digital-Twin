@@ -13,7 +13,8 @@ class ActionIntent(BaseModel):
         "list_calendar",
         "list_inbox",
         "get_recommendations",
-        "proactive_action"
+        "proactive_action",
+        "save_alert"
     ]
 
     context: Optional[Dict[str, Any]] = None
@@ -28,6 +29,9 @@ class ActionIntent(BaseModel):
     title: Optional[str] = None
     start: Optional[str] = None
     end: Optional[str] = None
+    #alert fields
+    message: Optional[str] = None
+    level: Optional[Literal["info", "warning", "critical"]] = None
 
     style_profile: Optional[Dict[str, Any]] = None
 

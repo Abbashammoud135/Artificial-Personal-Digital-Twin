@@ -90,6 +90,8 @@ async def analyze_medical_input(
     return document.to_dict()
 
 
+from datetime import datetime
+
 @router.get("/dashboard")
 async def health_dashboard(
     user=Depends(get_current_user),
@@ -97,20 +99,62 @@ async def health_dashboard(
 ):
     user_id = user["user_id"]
     reports = await repo.get_user_reports(user_id)
+
     total_reports = len(reports)
-    analyzed_reports = [r for r in reports if r.get("analysis")]
+
+    # Only valid analyzed reports
+    analyzed_reports = [
+        r for r in reports
+        if isinstance(r.get("analysis"), dict)
+    ]
+
+    # Safe anomaly count
     anomaly_count = sum(
-        len(r["analysis"].get("anomalies", []))
+        len(
+            r["analysis"]
+            .get("risk_profile", {})
+            .get("anomalies", [])
+        )
         for r in analyzed_reports
-        if isinstance(r["analysis"], dict)
     )
-    latest_report = max(reports, key=lambda r: r.get("upload_time"), default=None)
+
+    # -------------------------
+    # SAFE DATE HANDLING
+    # -------------------------
+    def get_upload_time(report):
+        t = report.get("upload_time")
+
+        # Case 1: datetime object (PyMongo / FastAPI)
+        if isinstance(t, datetime):
+            return t
+
+        # Case 2: Mongo-style {"$date": "..."}
+        if isinstance(t, dict):
+            return t.get("$date", "")
+
+        return ""
+
+    latest_report = max(
+        reports,
+        key=lambda r: get_upload_time(r),
+        default=None
+    )
+
+    # -------------------------
+    # RECENT INSIGHTS SAFE
+    # -------------------------
     recent_insights = []
+
     for report in analyzed_reports[-3:]:
-        if isinstance(report["analysis"], dict):
-            insights = report["analysis"].get("insights")
-            if insights:
-                recent_insights.extend(insights if isinstance(insights, list) else [insights])
+        analysis_block = report.get("analysis", {})
+
+        # IMPORTANT FIX: avoid analysis.analysis confusion
+        inner_analysis = analysis_block.get("analysis", {})
+
+        insights = inner_analysis.get("insights", [])
+
+        if isinstance(insights, list):
+            recent_insights.extend(insights)
 
     return {
         "total_reports": total_reports,

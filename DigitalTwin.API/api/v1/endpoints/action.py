@@ -1,5 +1,7 @@
 import os
+import urllib.parse
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import RedirectResponse
 from typing import List, Dict, Any, Optional
 from core.dependencies import get_current_user
 from agents.action.agent import ActionAgent
@@ -392,7 +394,7 @@ async def get_user_style_profile(
                 "tone": "neutral",
                 "signature": "",
                 "formatting": "paragraphs",
-                "recurring_phrases": []
+                "recurring_phrases": ["kind Regards,\n Abbas Hammoud"]
             }
         return profile
     except Exception as e:
@@ -490,6 +492,7 @@ async def get_proactive_recommendations(
 
 @router.get("/google/connect", status_code=status.HTTP_200_OK)
 def connect_google(
+    redirect_url: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -498,22 +501,26 @@ def connect_google(
     No data is saved at this step — credentials are stored after the OAuth callback completes.
     """
     user_id = current_user["user_id"]
-    # print(f"Generating Google OAuth URL for user_id: {user_id}")
-    url = action_agent.impl.email_tool.oauth_service.get_authorization_url(user_id, GOOGLE_REDIRECT_URI)
+    state = f"{user_id}:{redirect_url}" if redirect_url else user_id
+    url = action_agent.impl.email_tool.oauth_service.get_authorization_url(state, GOOGLE_REDIRECT_URI)
     return {"authorization_url": url}
 
 @router.get("/google/callback", status_code=status.HTTP_200_OK)
 async def google_callback(
     code: str,
-    state: str # contains the user_id
+    state: str # contains the user_id and optional return path
 ):
     """
     Callback URL where Google redirects after OAuth consent.
     Exchanges the authorization code for access/refresh tokens and links them to the user.
     """
     try:
+        parts = state.split(":", 1)
+        user_id = parts[0]
+        redirect_url = parts[1] if len(parts) > 1 else "http://localhost:5173/settings"
+
         creds = await action_agent.impl.email_tool.oauth_service.exchange_code_for_tokens(
-            user_id=state,
+            user_id=user_id,
             code=code,
             redirect_uri=GOOGLE_REDIRECT_URI
         )
@@ -522,16 +529,11 @@ async def google_callback(
                 status_code=500,
                 detail="OAuth failed: credentials not returned"
             )
-        return {
-            "status": "success",
-            "message": "Google account successfully linked to Digital Twin",
-            "is_mock": creds.get("is_mock", False) if creds else False
-        }
+        return RedirectResponse(url=f"{redirect_url}?google_auth=success")
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"OAuth callback failed: {str(e)}"
-        )
+        parts = state.split(":", 1)
+        redirect_url = parts[1] if len(parts) > 1 else "http://localhost:5173/settings"
+        return RedirectResponse(url=f"{redirect_url}?google_auth=error&detail={urllib.parse.quote(str(e))}")
 
 @router.post("/google/disconnect", status_code=status.HTTP_200_OK)
 async def disconnect_google(

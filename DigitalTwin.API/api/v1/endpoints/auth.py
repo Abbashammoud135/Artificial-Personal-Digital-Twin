@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from core.dependencies import get_auth_service
+from core.dependencies import get_auth_service, get_current_user
 from schemas.auth import RegisterRequest, LoginRequest
 import traceback
 
@@ -24,6 +24,11 @@ def login(req: LoginRequest, auth_service=Depends(get_auth_service)):
         print(f"❌ Login Error: {str(e)}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.get("/fullname")
+def get_user_fullname(user=Depends(get_current_user),auth_service=Depends(get_auth_service)):
+    return auth_service.get_user_fullname(user["user_id"])
+   
 
 # use the role based using 
 # @router.get("/summary")

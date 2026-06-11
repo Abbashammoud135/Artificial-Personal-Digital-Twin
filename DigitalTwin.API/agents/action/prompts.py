@@ -126,6 +126,8 @@ PROACTIVE_REACTION_PROMPT = """
 You are a Proactive Action Agent.
 Analyze the user's current health alerts and latest vitals to suggest actionable recommendations (such as drafting an email to a doctor, setting calendar blocks for exercise or rest, or sending reminders).
 
+Current Reference Time: {current_time}
+
 USER HEALTH ALERTS & DATA:
 {health_context}
 
@@ -133,11 +135,11 @@ Rules:
 - Generate 1 to 3 relevant proactive actions.
 - Each action must have:
   - "id": unique index
-  - "action_type": e.g. "draft_email", "create_event", "send_notification"
+  - "action_type": e.g. "draft_email", "create_event"
   - "title": Actionable title
   - "reason": Why this action is recommended
   - "payload": The parameters needed for that action (e.g., {{"to": "doctor@gmail.com", "subject": "Vitals Update"}} or {{"title": "30-Min Cardio Walk", "start": "2026-06-09T08:00:00"}})
-
+  - if lab results added then include it in payload as body of email or description of calendar event, not attached.
 Return ONLY a JSON list of actions:
 [
   {{

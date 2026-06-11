@@ -138,8 +138,17 @@ JSON:
 {
   "type": "proactive_action"
 }"""
-    }
-}
+    },
+"save_notification": {
+        "fields_schema": """- message (string): The alert message to save.
+- level (string): The severity level of the alert, one of "info", "warning", or "critical".""",
+        "examples": """Description: "save an alert with message 'Blood pressure high' and level 'warning'"
+JSON:{
+  "type": "save_notification",
+    "message": "Blood pressure high",
+    "level": "warning"
+    }"""
+}}
 
 class ActionImplementation:
     def __init__(self, services: dict = None):
@@ -227,6 +236,12 @@ class ActionImplementation:
 
         elif action.type in ["get_recommendations", "proactive_action"]:
             return await self.handle_proactive(user_id)
+        elif action.type == "save_notification":
+            return await self.notification_tool.save_notification(
+                user_id=user_id,
+                message=action.message,
+                level=action.level
+            )
 
         else:
             raise ValueError(f"Unknown action type: {action.type}")
@@ -327,23 +342,26 @@ class ActionImplementation:
         """
         # 1. Fetch user medical documents
         reports = await self.medical_repo.get_user_reports(user_id)
+        with open("C:\\Users\\User\\OneDrive\\Desktop\\4th year\\Semester 8\\mini Project\\agentic project\\Artificial-Personal-Digital-Twin\\DigitalTwin.API\\data\\medical_reports_debug.json", "w", encoding="utf-8") as f:
+            json.dump(reports, f, indent=2, default=str)       
         
         # 2. Fetch health alerts if any
         db = mongo.get_db()
         alert_cursor = db[Collections.HEALTH_ALERTS].find({"user_id": user_id})
         alerts = await alert_cursor.to_list(length=10)
-        
+        # print("Fetched health alerts:", alerts)
         # 3. Construct health context
         health_context = "No medical reports or active alerts found."
-        
         context_parts = []
         if reports:
             context_parts.append("Latest Medical Reports:")
             for r in reports[:2]:
                 title = r.get("file_name", "Report")
-                analysis = r.get("analysis", {})
+                analy = r.get("analysis", {})
+                analysis=analy.get("analysis", "No analysis available.")
+                # print(f"Report analysis for {title}:", analysis)
                 summary = analysis.get("summary", "No summary available.") if isinstance(analysis, dict) else "No summary available."
-                context_parts.append(f"- {title}: {summary}")
+                context_parts.append(f"- {title}: {summary} \n Important Lab results: {analysis.get('key_abnormalities', []) if isinstance(analysis, dict) else 'N/A'}")
                 
         if alerts:
             context_parts.append("\nActive Health Alerts:")
@@ -354,9 +372,9 @@ class ActionImplementation:
                 
         if context_parts:
             health_context = "\n".join(context_parts)
-
+        print("Constructed health context:", health_context)
         # 4. Invoke LLM to suggest actions
-        prompt = PROACTIVE_REACTION_PROMPT.format(health_context=health_context)
+        prompt = PROACTIVE_REACTION_PROMPT.format(current_time=datetime.now().isoformat(), health_context=health_context)
         response = self.llm.invoke(prompt)
         response_text = response.content if hasattr(response, 'content') else str(response)
 

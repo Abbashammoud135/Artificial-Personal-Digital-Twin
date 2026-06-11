@@ -44,3 +44,6 @@ class AuthService:
         self.user_repo.update_last_login(email)
 
         return token
+    def get_user_fullname(self, user_id):
+        user=self.user_repo.get_by_id(user_id)
+        return user.full_name if user else "Unknown User"

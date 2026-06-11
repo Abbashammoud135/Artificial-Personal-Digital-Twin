@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
+import re
 
 
 class TrendService:
@@ -7,12 +8,38 @@ class TrendService:
     def __init__(self, medical_repo):
         self.medical_repo = medical_repo
 
+    SYNONYMS = {
+        "choelesterolldl": "ldl",
+        "cholesterolldl": "ldl",
+        "ldlcholesterol": "ldl",
+
+        "cholesterolhdl": "hdl",
+        "hdlcholesterol": "hdl",
+
+        "cholesteroltotal": "total_cholesterol",
+        "cholesteroltserum": "total_cholesterol",
+        "Cholesterol -Serum": "total_cholesterol",
+    }
     def normalize_test_name(self, name: str):
-        return (
-            name.lower()
-            .replace(" ", "")
-            .replace("-", "")
-        )
+        name = name.lower()
+
+        # remove punctuation
+        name = re.sub(r"[^a-z0-9\s]", "", name)
+
+        # remove extra spaces
+        name = re.sub(r"\s+", " ", name).strip()
+
+        # remove common lab suffix noise
+        noise_words = {
+            "serum"
+        }
+
+        tokens = [
+            t for t in name.split()
+            if t not in noise_words
+        ]
+
+        return "".join(tokens)
 
     def extract_lab_history(self, reports):
 
@@ -51,7 +78,7 @@ class TrendService:
                     continue
 
                 key = self.normalize_test_name(test_name)
-
+                key = self.SYNONYMS.get(key, key)
                 grouped[key].append({
                     "test_name": test_name,
                     "value": value,
