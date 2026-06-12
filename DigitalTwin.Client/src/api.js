@@ -6,7 +6,43 @@ function updateLoading(delta) {
   if (activeRequests < 0) activeRequests = 0;
   window.dispatchEvent(new CustomEvent('api-loading', { detail: activeRequests > 0 }));
 }
+export async function request_stream(endpoint, options = {}) {
+  const url = `${BASE_URL}${endpoint}`;
 
+  const headers = { ...options.headers };
+
+  const token = localStorage.getItem("dt_token");
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  let body = options.body;
+
+  if (body && !(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(body);
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers,
+    body,
+  });
+
+  if (res.status === 401) {
+    localStorage.removeItem("dt_token");
+    localStorage.removeItem("dt_user");
+    window.dispatchEvent(new CustomEvent("api-auth-error"));
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "Request failed");
+  }
+
+  return res;
+}
 async function request(endpoint, options = {}) {
   updateLoading(1);
   const url = `${BASE_URL}${endpoint}`;
@@ -140,7 +176,13 @@ export const api = {
       method: 'POST',
       body: { question }
     }),
+    analyzeStream: async (payload) =>
+    request_stream("/health-agent/analyze/stream", {
+      method: "POST",
+      body: payload,
+    }),
     trends: async () => request('/health-trends/'),
+
   },
 
   // Action Agent

@@ -323,6 +323,7 @@ from core.rag.knowledge_base import KnowledgeBase
 class MedicalPipeline:
     def __init__(self, rag_service: KnowledgeBase | None = None):
         self.chain = MedicalChain()
+        
         self.rag = rag_service or KnowledgeBase()
         self.rag.initialize()
 
@@ -573,17 +574,101 @@ class MedicalPipeline:
             "analysis": analysis,
             "risk_profile": risk
         }
+        
+    def do_i_need_to_use_memory(self, question: str) -> dict[str, Any]:
+        prompt ="""You are a medical memory routing assistant.
 
-    def process_question(self, question: str) -> dict[str, Any]:
+Determine whether answering the user's question requires searching their stored medical records.
+
+The medical records contain ONLY the following information:
+
+{
+  "analysis": {
+    "lab_results": [
+      {
+        "test-name": "...",
+        "value": 123,
+        "units": "...",
+        "status": "NORMAL|HIGH|LOW",
+        "reference": "..."
+      }
+    ],
+    "analysis": {
+      "summary": "...",
+      "cardiovascular_risk": "...",
+      "metabolic_risk": "...",
+      "key_abnormalities": [...],
+      "recommendations": [...],
+      "insights": [...]
+    },
+    "risk_profile": {
+      "anomalies": [...],
+      "risk_scores": {
+        "cardiovascular": 0.0,
+        "metabolic": 0.0,
+        "general": 0.0,
+        "overall": 0.0
+      },
+      "abnormal_count": 0
+    }
+  }
+}
+
+Rules:
+
+1. Use memory ONLY if the answer depends on the user's stored medical data.
+2. The available data is LIMITED to the schema above.
+3. Never assume the existence of medications, diagnoses, allergies, doctor notes, imaging reports, surgeries, family history, or vital signs.
+4. Generate queries only for information that could exist in the schema.
+5. If memory is needed, return a short natural-language retrieval query.
+6. If memory is not needed, return:
+{
+  "need_memory": false,
+  "query": null
+}
+7. if user asking about fields or results non in the schema, memory is not needed, return false and null query
+Examples:
+
+Question: What is my last triglycerides value?
+Output:
+{
+  "need_memory": true,
+  "query": "latest triglycerides result"
+}
+
+Question: What causes high triglycerides?
+Output:
+{
+  "need_memory": false,
+  "query": null
+}
+Question: what do you suggest in this case?
+Output:
+{
+  "need_memory": false,
+  "query": null
+}since the question is too vague and doesn't specifically ask for stored medical data, we cannot assume memory is needed.
+
+Return ONLY valid JSON.
+
+Question:
+{question}"""
+        
+        llm_result = self.chain.llm.invoke(prompt.replace("{question}", question))
+        return self.parse_llm_response(llm_result)
+    
+    def process_question(self, question: str, user_name: str, memory: str) -> dict[str, Any]:
         cleaned = self.normalize_text(question)
         hints = self._get_rag_hints(cleaned)
         llm_result = self.chain.analyze({
             "question": cleaned,
             "source": "question",
-            "rag_hints": hints
+            "rag_hints": hints,
+            "user_name": user_name,
+            "memory": memory
         })
         analysis = self.parse_llm_response(llm_result)
-        analysis["rag_references"] = hints
+        # analysis["rag_references"] = hints
 
         return {
             "processed_at": datetime.datetime.utcnow().isoformat(),

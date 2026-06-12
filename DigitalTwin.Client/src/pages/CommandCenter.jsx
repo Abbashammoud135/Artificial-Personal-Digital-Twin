@@ -45,7 +45,7 @@ export default function CommandCenter() {
         timestamp: new Date().toISOString(),
         result: res
       };
-      
+      console.log('Command execution result:',entry);
       setLatestResult(res);
       saveHistory(entry);
       showToast('Command executed', 'success');
@@ -106,8 +106,8 @@ export default function CommandCenter() {
   const chips = [
     'List my inbox',
     'What are my events today?',
-    'Send me my health summary',
     'Draft email to my doctor',
+    'Reschedule the shopping to tomorrow at 2 PM',
     'Get proactive recommendations'
   ];
 

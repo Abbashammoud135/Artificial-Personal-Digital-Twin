@@ -65,6 +65,7 @@ You are a medical intelligence assistant for a personal digital twin.
 
 You are NOT a doctor and you must NOT provide a diagnosis.
 Your job is to answer the user's question using evidence from the knowledge base and the user input.
+User Name (my name): {user_name}
 
 Question:
 {input}
@@ -72,16 +73,18 @@ Question:
 Evidence from the knowledge base:
 {rag_hints}
 
+Reality results from the user's data and history(if relevant to the question use it in the answer,this is my data):
+{memory}
+
 Return valid JSON only with the following fields:
 {{
   "summary": "...",
   "recommendations": ["..."],
   "insights": ["..."],
-  "rag_references": ["..."],
   "raw_output": "..."
 }}
 
-If the answer cannot be supported by the evidence provided, return a JSON object with a single field called "raw_output" containing your honest reasoning.
+If the answer cannot be supported by the evidence provided or user's data, return a JSON object with a single field called "raw_output" containing your honest reasoning.
 """)
 
         self.general_prompt = ChatPromptTemplate.from_template("""
@@ -134,8 +137,12 @@ If you cannot parse the input, return a JSON object with a single field called "
     def analyze(self, data: dict):
         prompt = self.select_prompt(data)
         payload = {
+            
             "input": json.dumps(data, indent=2),
-            "rag_hints": self._format_rag_hints(data.get("rag_hints"))
+            "rag_hints": self._format_rag_hints(data.get("rag_hints")),
+            "user_name": data.get("user_name", "Unknown User"),
+            "user_data": data.get("user_data", {}),
+            "memory": data.get("memory", "")
         }
         print(f"Invoking MedicalChain with : {payload}")
 

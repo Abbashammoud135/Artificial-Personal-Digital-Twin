@@ -1,10 +1,26 @@
 import requests
 from typing import List, Dict, Any
+from datetime import datetime
 
+def safe_iso(dt_str):
+    if not dt_str:
+        return None
+    try:
+        return datetime.fromisoformat(dt_str).isoformat() + "Z"
+    except:
+        return None
 class GoogleCalendarService:
     def __init__(self):
         self.base_url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
 
+    def safe_iso(self,dt_str):
+        if not dt_str:
+            return None
+        try:
+            return datetime.fromisoformat(dt_str).isoformat() + "Z"
+        except:
+            return None
+        
     async def list_events(self, access_token: str, startTime: str, endTime: str) -> List[Dict[str, Any]]:
         """
         List upcoming events from the user's primary calendar.
@@ -12,17 +28,23 @@ class GoogleCalendarService:
         """
         if access_token.startswith("mock_access_token"):
             return self._get_mock_events()
+        
 
         headers = {"Authorization": f"Bearer {access_token}"}
         # Get next 20 events
         params = {"maxResults": 20, "singleEvents": True, "orderBy": "startTime"}
         if startTime:
-             params["timeMin"] = startTime
+            startTime = safe_iso(startTime)
+            if startTime:
+                params["timeMin"] = startTime
 
         if endTime:
-             params["timeMax"] = endTime
-        
+            endTime = safe_iso(endTime)
+            if endTime:
+                params["timeMax"] = endTime
+        print(f"start time {startTime} end time {endTime}")
         response = requests.get(self.base_url, headers=headers, params=params)
+        print(f"Google Calendar API response status: {response.status_code}")
         if response.status_code != 200:
             return self._get_mock_events()
             
@@ -36,6 +58,7 @@ class GoogleCalendarService:
                 "end": item.get("end", {}).get("dateTime") or item.get("end", {}).get("date"),
                 "description": item.get("description", "")
             })
+        print(f"Fetched {len(events)} events from Google Calendar")
         return events
 
     async def create_event(self, access_token: str, title: str, start: str, end: str, description: str = None) -> dict:

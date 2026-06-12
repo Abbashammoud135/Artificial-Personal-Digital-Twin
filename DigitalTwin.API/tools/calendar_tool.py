@@ -42,7 +42,9 @@ class CalendarTool:
 
     async def list_events(self, user_id: str, startTime: str, endTime: str) -> list:
         creds = await self.oauth_service.get_valid_credentials(user_id)
+        # print("I am inside list_events of CalendarTool")
         if creds:
+            print("I am inside list_events of CalendarTool to get real google calendar events")
             # Route to real Google Calendar
             return await self.google_calendar_service.list_events(creds["access_token"], startTime, endTime)
 

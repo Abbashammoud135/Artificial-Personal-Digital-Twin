@@ -10,7 +10,7 @@ Available action types:
 3. "send_email_direct": Send an email directly without modifying the message. Only select this if the user explicitly instructs not to edit or change the message (e.g. "don't change the message", "send exactly this", "send unmodified").
 4. "summarize_inbox": Summarize current inbox emails.
 5. "create_event": Create/schedule a new calendar event.
-6. "reschedule_event": Reschedule/update an existing calendar event.
+6. "reschedule_event": Reschedule/update/move an existing calendar event.
 7. "delete_event": Delete/cancel a calendar event.
 8. "list_calendar": List upcoming calendar events.
 9. "list_inbox": List/read current inbox emails.
@@ -58,6 +58,8 @@ Rules:
 - Respond ONLY with a valid JSON object matching the fields schema. Do not include markdown formatting or backticks.
 - Resolve relative times (e.g. "tomorrow at 10 AM", "next Monday") into precise ISO 8601 format (YYYY-MM-DDTHH:MM:SS) based on the Reference Time.
 - Use the examples as a guide for parameter extraction.
+- All the expected fields should be filled if possible.
+- if action_type="reschedule_event", then it is MANDATORY to fill both start and end time fields.
 - The output JSON MUST contain `"type": "{action_type}"`.
 
 Examples:

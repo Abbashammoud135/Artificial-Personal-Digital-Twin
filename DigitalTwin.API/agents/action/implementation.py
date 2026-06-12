@@ -11,6 +11,7 @@ from agents.action.schema import ActionIntent
 from core.llm.groq_llama_client import get_llm
 from agents.action.prompts import SELECT_ACTION_TYPES_PROMPT, EXTRACT_ACTION_FIELDS_PROMPT, PROACTIVE_REACTION_PROMPT
 from database.mongo.connection import mongo
+from datetime import datetime, timedelta, timezone
 
 ACTION_SCHEMAS = {
     "draft_email": {
@@ -82,8 +83,8 @@ JSON:
     },
     "reschedule_event": {
         "fields_schema": """- event_id (string): The ID of the event to reschedule.
-- start (string): New start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
-- end (string): New end time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).""",
+- start (string): New start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS). mandatory to fill
+- end (string): New end time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS). mandatory to fill""",
         "examples": """Description: "reschedule meeting event_123 to next Monday at 3 PM to 4 PM"
 Reference Time: 2026-06-08T08:00:00
 JSON:
@@ -158,11 +159,83 @@ class ActionImplementation:
         self.calendar_tool = CalendarTool(self.action_repo)
         self.notification_tool = NotificationTool(self.action_repo)
         self.llm = get_llm()
+    async def resolve_event_id(self, user_id: str, query: str, start: str = None, end: str = None) -> str | None:
+        """
+        Uses LLM to match a natural language query to a calendar event_id.
+        """
+        print(f"Query: {query}")
+        print(f"ZZ start {start} end {end}")
 
-    async def execute(self, user_id: str, action: ActionIntent) -> dict:
+        events = await self.calendar_tool.list_events(user_id, start, end)
+
+        simplified_events = [
+            {
+                "event_id": e.get("id"),
+                "title": e.get("title"),
+                "start": e.get("start"),
+                "end": e.get("end"),
+                "description":e.get("description")
+            }
+            for e in events
+        ]
+        print(f"simplified events{simplified_events}")
+
+        prompt = f"""
+    You are a calendar event matcher.
+    Reference time:{start}
+    TASK:
+    Find the best matching event_id for the user query.
+
+    STRICT RULES:
+    - Use ONLY the provided events
+    - Do NOT guess or hallucinate event IDs
+    - Match by title, time, or meaning
+    - If no match, return null
+    - Return ONLY JSON
+
+    OUTPUT FORMAT:
+    {{"event_id": "string or null"}}
+
+    User Query:
+    {query}
+
+    Events:
+    {json.dumps(simplified_events, indent=2)}
+    """
+
+        response = self.llm.invoke(prompt)
+        print("llm reponse event id", response)
+        text = response.content if hasattr(response, "content") else str(response)
+
+        cleaned = self._extract_json(text)
+
+        try:
+            result = json.loads(cleaned)
+            print(f"LLM resolved event_id: {result.get('event_id')}")
+            return result.get("event_id")
+        except Exception:
+            return None
+        
+    async def execute(self, user_id: str, action: ActionIntent,query:str) -> dict:
         """
         Executes a pre-structured ActionIntent.
         """
+        if action.type in ["reschedule_event", "delete_event"]:
+            start = datetime.now().replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0
+            )
+
+            end = start + timedelta(days=7)
+            action.event_id = await self.resolve_event_id(
+                user_id=user_id,
+                query=query,
+                start = start.isoformat(),
+                end = end.isoformat()
+            )
+            
         if action.type == "draft_email":
             topic = action.context.get("topic", "Update") if action.context else "Update"
             message_details = action.context.get("message", "") if action.context else ""
@@ -309,7 +382,7 @@ class ActionImplementation:
                     intent = ActionIntent(type=action_type)
             
             try:
-                result = await self.execute(user_id, intent)
+                result = await self.execute(user_id, intent,query)
                 executed_actions.append((intent, result))
             except Exception as e:
                 executed_actions.append((intent, {"status": "error", "message": str(e)}))
@@ -320,7 +393,7 @@ class ActionImplementation:
                 to="Recipient",
                 context={"topic": "Assistant Resolution", "message": query}
             )
-            fallback_result = await self.execute(user_id, fallback_intent)
+            fallback_result = await self.execute(user_id, fallback_intent,query)
             return {
                 "intent": fallback_intent.dict(),
                 "result": fallback_result,

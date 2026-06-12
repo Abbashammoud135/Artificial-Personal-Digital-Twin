@@ -31,17 +31,24 @@ class HealthAgent:
         await self._save_reasoning(user_id, "analyze_text", text, analysis)
         return analysis
 
-    async def ask_question(self, question: str, user_id: str) -> dict:
-        analysis = self.pipeline.process_question(question)
-        await self._save_reasoning(user_id, "ask_question", question, analysis)
+    async def ask_question(self,memory: str, question: str, user_name: str, user_id: str) -> dict:
+        analysis = self.pipeline.process_question(question,user_name,memory)
+        await self._save_reasoning(user_id, "ask_question", question, analysis,userName=user_name,memory=memory)
         return analysis
+    async def doINeedToUseMemory(self,question: str,user_id: str) -> dict:
+        answer = self.pipeline.do_i_need_to_use_memory(question)
+        print(f"Raw response for memory usage decision: {answer}")
+        return answer
+       
 
-    async def _save_reasoning(self, user_id: str, action: str, input_value: str, analysis: dict):
+    async def _save_reasoning(self, user_id: str, action: str, input_value: str, analysis: dict, userName: str = None, memory: str = None):
         payload = {
             "user_id": user_id,
             "action": action,
             "input": input_value,
             "analysis": analysis,
+            "user_name": userName,
+            "memory": memory,
             "rag_references": analysis.get("rag_references") if isinstance(analysis, dict) else None,
             "timestamp": datetime.utcnow()
         }

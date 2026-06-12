@@ -52,7 +52,9 @@ export default function Dashboard() {
 
       // Fetch calendar events
       try {
-        const cal = await api.action.calendar.events();
+        const start = new Date().toISOString();
+      // const end = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        const cal = await api.action.calendar.events(start);
         setCalendarEvents(cal.events ? cal.events.slice(0, 3) : []);
       } catch (e) {
         console.warn('Could not load calendar events (often due to Google unlinked):', e);

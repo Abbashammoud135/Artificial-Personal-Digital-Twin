@@ -158,21 +158,71 @@ export default function HealthIntelligence() {
     if (!chatQuestion.trim()) return;
 
     const userMessage = chatQuestion;
-    setChatHistory(prev => [...prev, { role: 'user', text: userMessage }]);
+
+    // 1. show user message
+    setChatHistory(prev => [
+      ...prev,
+      { role: 'user', text: userMessage },
+      { role: 'agent', text: '' } // empty placeholder for streaming
+    ]);
+
     setChatQuestion('');
     setChatLoading(true);
 
     try {
+      // 2. call normal API (gets structured medical context)
+      
       const res = await api.healthDocs.ask(userMessage);
-      setChatHistory(prev => [...prev, { role: 'agent', text: res.answer || res.response || res }]);
+
+      const payload = {
+        question: userMessage,
+        summary: res.analysis.summary,
+        recommendations: res.analysis.recommendations,
+        insights: res.analysis.insights,
+        raw_output: res.analysis.raw_output,
+        chat_history: chatHistory.slice(-6)
+      };
+
+      // 3. STREAM response
+      const streamRes = await api.healthDocs.analyzeStream(payload);
+
+      const reader = streamRes.body.getReader();
+      const decoder = new TextDecoder();
+
+      let fullText = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        fullText += decoder.decode(value, { stream: true });
+
+        // 4. update last message (agent bubble)
+        setChatHistory(prev => {
+          const copy = [...prev];
+          copy[copy.length - 1] = {
+            role: 'agent',
+            text: fullText
+          };
+          return copy;
+        });
+      }
+
     } catch (err) {
       showToast(err.message || 'Could not fetch answer', 'error');
-      setChatHistory(prev => [...prev, { role: 'agent', text: 'Error: Could not retrieve response from health agent.' }]);
+
+      setChatHistory(prev => {
+        const copy = [...prev];
+        copy[copy.length - 1] = {
+          role: 'agent',
+          text: 'Error: Could not retrieve response from health agent.'
+        };
+        return copy;
+      });
     } finally {
       setChatLoading(false);
     }
   };
-
   const handleProfileSave = async (e) => {
     e.preventDefault();
     setProfileSaving(true);
@@ -543,7 +593,7 @@ const getReportName = (fileUrl) => {
             {/* Messages body */}
             <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {chatHistory.map((msg, idx) => (
-                <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'user' : 'agent'}`}>
+                <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'user' : 'agent'}`} style={{ whiteSpace: "pre-wrap" }}>
                   {msg.text}
                 </div>
               ))}
