@@ -1,0 +1,63 @@
+services:
+  # Local Redis Service
+  redis:
+    image: redis:7-alpine
+    container_name: digitaltwin_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  # Backend FastAPI Service
+  backend:
+    build:
+      context: ./DigitalTwin.API
+      dockerfile: Dockerfile
+    container_name: digitaltwin_backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    env_file:
+      - ./DigitalTwin.API/.env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - backend_uploads:/app/uploads
+    restart: unless-stopped
+
+  # Frontend Nginx Service
+  frontend:
+    build:
+      context: ./DigitalTwin.Client
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000
+    container_name: digitaltwin_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+# Optional dockerized SQL Server (uncomment to use)
+#   mssql:
+#     image: mcr.microsoft.com/mssql/server:2022-latest
+#     container_name: digitaltwin_mssql
+#     ports:
+#       - "1433:1433"
+#     environment:
+#       - ACCEPT_EULA=Y
+#       - MSSQL_SA_PASSWORD=YourStrongPassword123!
+#     volumes:
+#       - mssql_data:/var/opt/mssql
+#     restart: unless-stopped
+
+volumes:
+  redis_data:
+  backend_uploads:
+#   mssql_data: # Uncomment if using dockerized SQL Server

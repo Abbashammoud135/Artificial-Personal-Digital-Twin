@@ -415,8 +415,8 @@ class ActionImplementation:
         """
         # 1. Fetch user medical documents
         reports = await self.medical_repo.get_user_reports(user_id)
-        with open("C:\\Users\\User\\OneDrive\\Desktop\\4th year\\Semester 8\\mini Project\\agentic project\\Artificial-Personal-Digital-Twin\\DigitalTwin.API\\data\\medical_reports_debug.json", "w", encoding="utf-8") as f:
-            json.dump(reports, f, indent=2, default=str)       
+        # with open("C:\\Users\\User\\OneDrive\\Desktop\\4th year\\Semester 8\\mini Project\\agentic project\\Artificial-Personal-Digital-Twin\\DigitalTwin.API\\data\\medical_reports_debug.json", "w", encoding="utf-8") as f:
+        #     json.dump(reports, f, indent=2, default=str)       
         
         # 2. Fetch health alerts if any
         db = mongo.get_db()

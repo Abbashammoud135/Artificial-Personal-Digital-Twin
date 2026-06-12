@@ -14,14 +14,24 @@ class SQLDatabase:
     def connect(self):
         host = os.getenv("DB_HOST")
         db_name = os.getenv("DB_NAME")
+        db_auth = os.getenv("DB_AUTH", "windows")
+        db_user = os.getenv("DB_USER")
+        db_password = os.getenv("DB_PASSWORD")
 
-        # Windows Authentication connection string
-        connection_string = (
-            f"mssql+pyodbc://@{host}/{db_name}"
-            "?driver=ODBC+Driver+17+for+SQL+Server"
-            "&trusted_connection=yes"
-            "&TrustServerCertificate=yes"
-        )
+        if db_auth.lower() == "sql" or (db_user and db_password):
+            connection_string = (
+                f"mssql+pyodbc://{db_user}:{db_password}@{host}/{db_name}"
+                "?driver=ODBC+Driver+17+for+SQL+Server"
+                "&TrustServerCertificate=yes"
+            )
+        else:
+            # Windows Authentication connection string
+            connection_string = (
+                f"mssql+pyodbc://@{host}/{db_name}"
+                "?driver=ODBC+Driver+17+for+SQL+Server"
+                "&trusted_connection=yes"
+                "&TrustServerCertificate=yes"
+            )
 
         self.engine = create_engine(connection_string, pool_pre_ping=True)
 
