@@ -11,26 +11,27 @@ class SQLDatabase:
         self.engine = None
         self.SessionLocal = None
 
+    def is_docker(self):
+        return os.path.exists("/.dockerenv")
     def connect(self):
         host = os.getenv("DB_HOST")
         db_name = os.getenv("DB_NAME")
         db_auth = os.getenv("DB_AUTH", "windows")
         db_user = os.getenv("DB_USER")
         db_password = os.getenv("DB_PASSWORD")
+        
+        if self.is_docker():
+            host = "sqlserver"
+            # db_password="StrongPass123!"
 
         if db_auth.lower() == "sql" or (db_user and db_password):
             connection_string = (
-                f"mssql+pyodbc://{db_user}:{db_password}@{host}/{db_name}"
-                "?driver=ODBC+Driver+17+for+SQL+Server"
-                "&TrustServerCertificate=yes"
+                f"mssql+pymssql://{db_user}:{db_password}@{host}/{db_name}"
             )
         else:
             # Windows Authentication connection string
             connection_string = (
-                f"mssql+pyodbc://@{host}/{db_name}"
-                "?driver=ODBC+Driver+17+for+SQL+Server"
-                "&trusted_connection=yes"
-                "&TrustServerCertificate=yes"
+                f"mssql+pymssql://{db_user}:{db_password}@{host}/{db_name}"
             )
 
         self.engine = create_engine(connection_string, pool_pre_ping=True)

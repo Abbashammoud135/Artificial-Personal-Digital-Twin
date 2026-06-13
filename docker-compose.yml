@@ -8,7 +8,18 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-
+  sqlserver:
+      image: mcr.microsoft.com/mssql/server:2022-latest
+      container_name: digitaltwin_sql
+      ports:
+        - "1433:1433"
+      environment:
+        ACCEPT_EULA: "Y"
+        SA_PASSWORD:  ${DB_PASSWORD}
+      restart: unless-stopped
+      volumes:
+        - sql_data:/var/opt/mssql
+      
   # Backend FastAPI Service
   backend:
     build:
@@ -19,13 +30,12 @@ services:
       - "8000:8000"
     depends_on:
       - redis
+      - sqlserver
     env_file:
-      - ./DigitalTwin.API/.env
+      - ./.env
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - backend_uploads:/app/uploads
     restart: unless-stopped
@@ -39,25 +49,38 @@ services:
         - VITE_API_URL=http://localhost:8000
     container_name: digitaltwin_frontend
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     restart: unless-stopped
 
-# Optional dockerized SQL Server (uncomment to use)
-#   mssql:
-#     image: mcr.microsoft.com/mssql/server:2022-latest
-#     container_name: digitaltwin_mssql
-#     ports:
-#       - "1433:1433"
-#     environment:
-#       - ACCEPT_EULA=Y
-#       - MSSQL_SA_PASSWORD=YourStrongPassword123!
-#     volumes:
-#       - mssql_data:/var/opt/mssql
-#     restart: unless-stopped
+  db-init:
+    image: mcr.microsoft.com/mssql-tools
+    depends_on:
+      - sqlserver
+    env_file:
+      - ./.env
+    volumes:
+      - ./db/init.sql:/init.sql
+    command: >
+      /bin/bash -c "
+      until /opt/mssql-tools/bin/sqlcmd
+      -S sqlserver
+      -U ${DB_USER}
+      -P ${DB_PASSWORD}
+      -Q 'SELECT 1';
+      do sleep 5;
+      done;
+
+      /opt/mssql-tools/bin/sqlcmd
+      -S sqlserver
+      -U ${DB_USER}
+      -P ${DB_PASSWORD}
+      -i /init.sql
+      "
+    restart: "no"
 
 volumes:
   redis_data:
   backend_uploads:
-#   mssql_data: # Uncomment if using dockerized SQL Server
+  sql_data:

@@ -12,7 +12,7 @@ class AuthService:
         existing = self.user_repo.get_by_email(email)
         if existing:
             raise Exception("User already exists")
-
+        
         user_data = {
             "full_name": full_name,
             "email": email,

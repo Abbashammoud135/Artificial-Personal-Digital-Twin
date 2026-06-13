@@ -60,6 +60,7 @@ class MemoryAgent:
         # 2. Inject user_id filter programmatically for strict data isolation
         if "filter" not in query or query["filter"] is None:
             query["filter"] = {}
+            
         query["filter"]["user_id"] = user_id
 
         # print("🧠 Generated MongoDB Query with isolation:", query)

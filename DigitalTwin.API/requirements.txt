@@ -16,9 +16,9 @@ langchain-ollama
 google-genai
 langchain-groq
 python-dotenv
-sentence-transformers
+sentence-transformers==5.4.1
 faiss-cpu
-camelot
+camelot-py
 python-jose
 passlib[bcrypt]
 email-validator
