@@ -142,17 +142,9 @@ GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/action/google/callback
 
 ### Method A: Running via Docker (Recommended)
 
-Running the application via Docker Compose builds the backend and frontend services, sets up isolated Redis and SQL Server database containers, and handles database initialization automatically.
+Running the application via Docker Compose builds the backend and frontend services, spins up isolated Redis and SQL Server database containers, and handles database initialization automatically. All dependencies run inside containers, meaning no local SQL Server or Redis installation is required on your host machine.
 
-#### 1. SQL Server Authentication configuration (Required for Host Database connections)
-If you are planning to connect to a SQL Server database running directly on your Windows host instead of inside Docker:
-1. Open **SQL Server Management Studio (SSMS)**.
-2. Right-click the server instance name -> click **Properties** -> click **Security** -> select **SQL Server and Windows Authentication mode** under *Server authentication*.
-3. Expand **Security** -> click **Logins** -> right-click **sa** (or create a new user login) -> click **Properties**. Set a strong password, and in the *Status* page, make sure the login is **Enabled** and permission to connect is **Granted**.
-4. Configure SQL Server to allow TCP/IP connections: Open **SQL Server Configuration Manager**, enable **TCP/IP** under *SQL Server Network Configuration -> Protocols*, and set TCP Port under *IP Addresses* to `1433`.
-5. Restart the SQL Server Windows service.
-
-#### 2. Run Docker Compose
+#### 1. Run Docker Compose
 Open a terminal in the root directory and execute:
 ```bash
 docker compose up --build -d
@@ -160,11 +152,13 @@ docker compose up --build -d
 *   `--build` instructs Docker to rebuild the custom Python backend and React frontend container images.
 *   `-d` runs the containers in detached (background) mode.
 
-#### 3. Access the Applications
+Upon startup, the `db-init` service will wait for the SQL Server container to boot and automatically run [/db/init.sql](file:///c:/Users/User/OneDrive/Desktop/4th%20year/Semester%208/mini%20Project/agentic%20project/Artificial-Personal-Digital-Twin/db/init.sql) to seed the database schemas.
+
+#### 2. Access the Applications
 *   **Frontend Web Dashboard**: Open your browser at [http://localhost:8080](http://localhost:8080)
 *   **Backend OpenAPI Documentation**: Access [http://localhost:8000/docs](http://localhost:8000/docs)
 
-#### 4. Managing Containers
+#### 3. Managing Containers
 *   **View Logs**:
     ```bash
     docker compose logs -f
@@ -174,7 +168,12 @@ docker compose up --build -d
     docker compose down
     ```
 
-For detailed network configurations and troubleshooting steps (such as configuring Windows Firewall for port `1433`), check the [README.docker.md](file:///c:/Users/User/OneDrive/Desktop/4th%20year/Semester%208/mini%20Project/agentic%20project/Artificial-Personal-Digital-Twin/README.docker.md) file.
+#### 💡 Optional: Accessing SQL Server Container from Host (SSMS)
+Since the SQL Server container exposes port `1433`, you can connect to it directly from your host using SQL Server Management Studio (SSMS):
+*   **Server Name**: `127.0.0.1,1433` (or `localhost,1433`)
+*   **Authentication**: SQL Server Authentication
+*   **Login**: Use the `DB_USER` defined in your `.env` (usually `sa`)
+*   **Password**: Use the `DB_PASSWORD` defined in your `.env`
 
 ---
 
