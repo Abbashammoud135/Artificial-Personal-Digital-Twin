@@ -71,8 +71,11 @@ export default function NeuralNetwork() {
     const animate = () => {
       ctx.clearRect(0, 0, width, height);
 
+      // Check current theme dynamically
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
       // Draw background overlay grid pulse
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.01)';
+      ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.01)';
       ctx.lineWidth = 1;
       const gridSize = 60;
       for (let x = 0; x < width; x += gridSize) {

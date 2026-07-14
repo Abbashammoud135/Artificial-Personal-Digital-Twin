@@ -153,11 +153,10 @@ export default function HealthIntelligence() {
     }
   };
 
-  const handleChatSend = async (e) => {
-    e.preventDefault();
-    if (!chatQuestion.trim()) return;
-
-    const userMessage = chatQuestion;
+  const handleChatSend = async (e, directQuery = null) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const userMessage = directQuery || chatQuestion;
+    if (!userMessage.trim()) return;
 
     // 1. show user message
     setChatHistory(prev => [
@@ -166,7 +165,9 @@ export default function HealthIntelligence() {
       { role: 'agent', text: '' } // empty placeholder for streaming
     ]);
 
-    setChatQuestion('');
+    if (!directQuery) {
+      setChatQuestion('');
+    }
     setChatLoading(true);
 
     try {
@@ -580,46 +581,198 @@ const getReportName = (fileUrl) => {
 
       {/* Tab: Health Agent Chat */}
       {activeTab === 'chat' && (
-        <div className="glass-card" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: '450px' }}>
-          <div className="flex-between" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Activity size={18} color="var(--primary)" />
-              Health Agent Co-Pilot
-            </h3>
-            <span className="badge badge-success">RAG Database Online</span>
+        <div className="glass-card" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: '550px' }}>
+          <div className="flex-between" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '16px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'rgba(0, 212, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid rgba(0, 212, 255, 0.15)'
+              }}>
+                <HeartPulse size={18} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 4px var(--primary))' }} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '16px', margin: 0 }}>Health Agent Co-Pilot</h3>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Secure Medical RAG Engine</span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', display: 'inline-block', boxShadow: '0 0 8px var(--success)' }} />
+              <span className="badge badge-success" style={{ fontSize: '10px' }}>RAG Database Online</span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '350px', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, height: '480px', border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden' }}>
             {/* Messages body */}
-            <div style={{ flexGrow: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {chatHistory.map((msg, idx) => (
-                <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'user' : 'agent'}`} style={{ whiteSpace: "pre-wrap" }}>
-                  {msg.text}
-                </div>
-              ))}
+            <div style={{ flexGrow: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(var(--bg-dark-rgb), 0.2)' }}>
+              {chatHistory.map((msg, idx) => {
+                const isUser = msg.role === 'user';
+                return (
+                  <div 
+                    key={idx} 
+                    style={{ 
+                      display: 'flex', 
+                      gap: '12px', 
+                      flexDirection: isUser ? 'row-reverse' : 'row',
+                      alignItems: 'flex-start',
+                      width: '100%',
+                      animation: 'fadeIn 0.2s ease-out'
+                    }}
+                  >
+                    {/* Avatar */}
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: isUser ? 'rgba(123, 97, 255, 0.12)' : 'rgba(0, 212, 255, 0.08)',
+                      border: isUser ? '1px solid rgba(123, 97, 255, 0.25)' : '1px solid var(--border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 'bold',
+                      flexShrink: 0
+                    }}>
+                      {isUser ? 'U' : <HeartPulse size={14} color="var(--primary)" />}
+                    </div>
+
+                    {/* Bubble Content */}
+                    <div style={{
+                      maxWidth: '75%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      whiteSpace: 'pre-wrap',
+                      background: isUser ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(123, 97, 255, 0.12) 100%)' : 'var(--surface)',
+                      color: 'var(--text-primary)',
+                      border: isUser ? '1px solid rgba(123, 97, 255, 0.2)' : '1px solid var(--border)',
+                      borderTopRightRadius: isUser ? '2px' : '12px',
+                      borderTopLeftRadius: isUser ? '12px' : '2px',
+                    }}>
+                      {msg.text}
+                    </div>
+                  </div>
+                );
+              })}
+
               {chatLoading && (
-                <div className="chat-bubble agent" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span className="global-loading-bar" style={{ position: 'relative', width: '20px', height: '3px', margin: 0 }} />
-                  Processing history database...
+                <div 
+                  style={{ 
+                    display: 'flex', 
+                    gap: '12px', 
+                    alignItems: 'flex-start',
+                    width: '100%',
+                    animation: 'fadeIn 0.2s ease-out'
+                  }}
+                >
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'rgba(0, 212, 255, 0.08)',
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <HeartPulse size={14} color="var(--primary)" />
+                  </div>
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    borderTopLeftRadius: '2px',
+                    border: '1px solid var(--border)',
+                    background: 'var(--surface)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', animation: 'typingBounce 1.4s infinite ease-in-out both' }} />
+                    <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', animation: 'typingBounce 1.4s infinite ease-in-out both', animationDelay: '0.2s' }} />
+                    <div className="typing-dot" style={{ width: '6px', height: '6px', background: 'var(--primary)', borderRadius: '50%', animation: 'typingBounce 1.4s infinite ease-in-out both', animationDelay: '0.4s' }} />
+                  </div>
+                </div>
+              )}
+
+              {chatHistory.length <= 1 && !chatLoading && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                  marginTop: '16px',
+                  padding: '16px',
+                  background: 'rgba(0, 212, 255, 0.01)',
+                  border: '1px dashed var(--border)',
+                  borderRadius: '12px',
+                  animation: 'fadeIn 0.4s ease-out'
+                }}>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Suggested Consultations
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      'Evaluate my overall cardiovascular and metabolic risk factors.',
+                      'Summarize the key abnormal biomarkers found in my diagnostics history.',
+                      'Provide concrete wellness recommendations based on my sleep hours and biometrics.'
+                    ].map((suggestion, sIdx) => (
+                      <button
+                        key={sIdx}
+                        type="button"
+                        onClick={() => handleChatSend(null, suggestion)}
+                        style={{
+                          background: 'var(--surface)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          fontSize: '13px',
+                          textAlign: 'left',
+                          color: 'var(--text-primary)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--primary)';
+                          e.currentTarget.style.background = 'rgba(0, 212, 255, 0.04)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--border)';
+                          e.currentTarget.style.background = 'var(--surface)';
+                        }}
+                      >
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✦</span>
+                        <span style={{ flexGrow: 1 }}>{suggestion}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Input bar */}
-            <form onSubmit={handleChatSend} className="chat-input-wrapper">
+            <form onSubmit={handleChatSend} className="chat-input-wrapper" style={{ padding: '16px', background: 'rgba(var(--bg-dark-rgb), 0.4)' }}>
               <input
                 type="text"
                 value={chatQuestion}
                 onChange={(e) => setChatQuestion(e.target.value)}
                 placeholder="Ask anything about your clinical reports, BMI, blood sugar levels, etc."
                 disabled={chatLoading}
-                style={{ flexGrow: 1 }}
+                style={{ flexGrow: 1, borderRadius: '24px', paddingLeft: '20px', paddingRight: '20px' }}
               />
               <button 
                 type="submit" 
                 className="btn btn-primary" 
                 disabled={chatLoading || !chatQuestion.trim()}
-                style={{ padding: '0 16px' }}
+                style={{ borderRadius: '50%', width: '45px', height: '45px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Send size={16} />
               </button>
@@ -724,7 +877,6 @@ const getReportName = (fileUrl) => {
                   id="gender"
                   value={profile.gender}
                   onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                  style={{backgroundColor: "#141d2b",color: "#ffffff"}}
                 >
                   <option value="male">Male</option>
                   <option value="female">Female</option>

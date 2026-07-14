@@ -83,7 +83,7 @@ export default function TrendChart({ testName, units, points = [], trend }) {
                 y1={y}
                 x2={width - paddingRight}
                 y2={y}
-                stroke="rgba(255,255,255,0.04)"
+                stroke="var(--border)"
                 strokeDasharray="4 4"
               />
               <text
@@ -145,7 +145,7 @@ export default function TrendChart({ testName, units, points = [], trend }) {
               cx={c.x}
               cy={c.y}
               r={hoveredPoint?.x === c.x && hoveredPoint?.y === c.y ? 6 : 4}
-              fill="#050D1A"
+              fill="var(--bg-dark)"
               stroke={c.status === 'HIGH' || c.status === 'LOW' ? 'var(--warning)' : trendColor}
               strokeWidth="2"
               onMouseEnter={() => setHoveredPoint(c)}

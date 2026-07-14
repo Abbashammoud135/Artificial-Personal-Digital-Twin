@@ -9,10 +9,13 @@ import {
   ShieldAlert, 
   User, 
   HelpCircle,
-  Database
+  Database,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { api } from '../api';
 import { showToast } from '../components/Toast';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -20,6 +23,7 @@ export default function Settings() {
   const [googleConnected, setGoogleConnected] = useState(false);
   const [googleInfo, setGoogleInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   const fetchSettingsData = async () => {
     setLoading(true);
@@ -215,6 +219,24 @@ export default function Settings() {
               style={{ width: '100%', marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}
             >
               <LogOut size={16} /> Sign Out from Twin
+            </button>
+          </div>
+
+          <div className="glass-card">
+            <h3 style={{ fontSize: '18px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {theme === 'dark' ? <Moon size={18} color="var(--primary)" /> : <Sun size={18} color="var(--primary)" />}
+              Display Theme Config
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '16px' }}>
+              Toggle between Dark Mode and Light Mode settings.
+            </p>
+            <button 
+              onClick={toggleTheme} 
+              className="btn btn-secondary"
+              style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px' }}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              Switch to {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
             </button>
           </div>
 

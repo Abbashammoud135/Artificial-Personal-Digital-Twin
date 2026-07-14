@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Layers } from 'lucide-react';
+import { Layers, Sun, Moon } from 'lucide-react';
 import { api } from '../api';
 import { showToast } from '../components/Toast';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -10,6 +11,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,6 +42,30 @@ export default function Register() {
       position: 'relative',
       zIndex: 2,
     }}>
+      {/* Floating Theme Toggle */}
+      <button
+        onClick={toggleTheme}
+        style={{
+          position: 'absolute',
+          top: '24px',
+          right: '24px',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          color: 'var(--text-muted)',
+          cursor: 'pointer',
+          padding: '10px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s ease',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+        }}
+        title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <div className="glass-card" style={{ width: '100%', maxWidth: '420px', padding: '36px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '32px' }}>
           <div style={{

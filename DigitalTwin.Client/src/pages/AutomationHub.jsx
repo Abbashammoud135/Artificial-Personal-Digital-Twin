@@ -1102,19 +1102,19 @@ export default function AutomationHub() {
         <style>
             {`
               #comp-style {
-                background-color: #111827;
-                color: #ffffff;
-                border: 1px solid #374151;
+                background-color: var(--bg-dark);
+                color: var(--text-primary);
+                border: 1px solid var(--border);
               }
 
               #comp-style option {
-                background-color: #111827;
-                color: #ffffff;
+                background-color: var(--bg-dark);
+                color: var(--text-primary);
               }
 
               #comp-style option:checked {
-                background-color: #2563eb;
-                color: white;
+                background-color: var(--primary);
+                color: #ffffff;
               }
             `}
           </style>

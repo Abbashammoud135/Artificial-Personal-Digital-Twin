@@ -128,7 +128,7 @@ export default function CommandCenter() {
           
           <AIPulse isActive={isActive || query.length > 0} isThinking={isThinking}>
             <div style={{
-              background: 'rgba(3, 8, 17, 0.9)',
+              background: 'rgba(var(--bg-dark-rgb), 0.9)',
               borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
@@ -254,7 +254,7 @@ export default function CommandCenter() {
                   whiteSpace: 'pre-wrap',
                   maxHeight: '300px',
                   overflowY: 'auto',
-                  background: 'rgba(3,8,17,0.3)',
+                  background: 'rgba(var(--bg-dark-rgb), 0.3)',
                   padding: '12px',
                   borderRadius: '8px',
                   border: '1px solid var(--border)'

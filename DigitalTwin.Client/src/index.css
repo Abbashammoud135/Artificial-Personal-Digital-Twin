@@ -623,3 +623,158 @@ label {
 .toast.error { border-color: var(--danger); }
 .toast.warning { border-color: var(--warning); }
 .toast.info { border-color: var(--primary); }
+
+/* ==========================================================================
+   Light Theme Overrides
+   ========================================================================== */
+
+[data-theme="light"] {
+  --bg-dark: #F8FAFC;
+  --bg-dark-rgb: 248, 250, 252;
+  --surface: rgba(15, 23, 42, 0.03);
+  --surface-hover: rgba(15, 23, 42, 0.05);
+  --border-glow: rgba(2, 132, 199, 0.12);
+  
+  --primary: #0284C7;
+  --primary-rgb: 2, 132, 199;
+  --secondary: #4F46E5;
+  --secondary-rgb: 79, 70, 229;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  
+  --text-primary: #0F172A;
+  --text-muted: #475569;
+  --border: rgba(15, 23, 42, 0.08);
+  --border-focus: rgba(2, 132, 199, 0.4);
+}
+
+[data-theme="light"] body {
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(2, 132, 199, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(79, 70, 229, 0.06) 0%, transparent 40%);
+}
+
+[data-theme="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.75);
+  border-right-color: var(--border);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+[data-theme="light"] input, 
+[data-theme="light"] textarea, 
+[data-theme="light"] select {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] input:focus, 
+[data-theme="light"] textarea:focus, 
+[data-theme="light"] select:focus {
+  background: rgba(0, 0, 0, 0.04);
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="light"] .btn-primary {
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(2, 132, 199, 0.2);
+}
+
+[data-theme="light"] .btn-secondary {
+  background: rgba(15, 23, 42, 0.04);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: rgba(15, 23, 42, 0.08);
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="light"] .btn-danger {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}
+
+[data-theme="light"] .btn-danger:hover {
+  background: rgba(220, 38, 38, 0.15);
+}
+
+[data-theme="light"] .badge-info {
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+}
+
+[data-theme="light"] .badge-success {
+  background: rgba(5, 150, 105, 0.08);
+  color: var(--success);
+  border: 1px solid rgba(5, 150, 105, 0.18);
+}
+
+[data-theme="light"] .badge-warning {
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--warning);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .badge-danger {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  border: 1px solid rgba(220, 38, 38, 0.18);
+}
+
+[data-theme="light"] .chat-container {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+[data-theme="light"] .chat-bubble.agent {
+  background: rgba(15, 23, 42, 0.03);
+}
+
+[data-theme="light"] .chat-bubble.user {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.2);
+}
+
+[data-theme="light"] .chat-input-wrapper {
+  background: rgba(248, 250, 252, 0.8);
+}
+
+[data-theme="light"] .glass-card {
+  box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .glass-card:hover {
+  box-shadow: 
+    0 12px 40px 0 rgba(15, 23, 42, 0.1),
+    0 0 20px 0 rgba(2, 132, 199, 0.08);
+}
+
+[data-theme="light"] .toast {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="light"] .chart-tooltip {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 20px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="light"] .tab-trigger.active {
+  background: rgba(2, 132, 199, 0.08);
+  text-shadow: none;
+}
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1.1); opacity: 1; }
+}

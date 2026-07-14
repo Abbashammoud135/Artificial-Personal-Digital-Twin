@@ -11,16 +11,20 @@ import {
   ChevronRight, 
   Layers,
   Link,
-  Link2Off
+  Link2Off,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { api } from '../api';
 import { showToast } from './Toast';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [googleConnected, setGoogleConnected] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     // Get user from local storage
@@ -195,24 +199,45 @@ export default function Sidebar() {
           </div>
         )}
 
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--danger)',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'background 0.2s',
-          }}
-          title="Sign Out"
-        >
-          <LogOut size={18} />
-        </button>
+        <div style={{ display: 'flex', gap: '4px', flexDirection: isCollapsed ? 'column' : 'row' }}>
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--danger)',
+              cursor: 'pointer',
+              padding: '8px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.2s',
+            }}
+            title="Sign Out"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
     </aside>
   );
