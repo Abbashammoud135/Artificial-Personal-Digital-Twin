@@ -70,10 +70,11 @@ JSON:
 """
 
 EMAIL_DRAFTING_PROMPT = """
-You are an Email Drafting Specialist representing the user.
+You are an Email Drafting Specialist representing the user {user_name}.
 Write an email draft based on the topic/message details and match the user's custom style profile.
 
 STYLE PROFILE:
+- User's Name: {user_name}
 - Tone: {tone}
 - Signature: {signature}
 - Formatting Style: {formatting}
@@ -86,7 +87,7 @@ EMAIL CONTEXT:
 
 Rules:
 - Output only the generated email subject and body in the following structure.
-- If possible, write the draft in a natural way that fits the tone (e.g. formal, casual, concise). Do not write placeholders like "[My Name]". Use the user's signature.
+- If possible, write the draft in a natural way that fits the tone (e.g. formal, casual, concise). Do not write placeholders like "[My Name]" or "[Your Name]". Sign off using the user's signature (which is {signature}) and/or the user's actual name: {user_name}.
 
 Format:
 Subject: <subject line>
@@ -95,10 +96,11 @@ Body:
 """
 
 EMAIL_ENHANCEMENT_PROMPT = """
-You are an Email Grammar and Style Specialist representing the user.
+You are an Email Grammar and Style Specialist representing the user {user_name}.
 Review the provided draft email and enhance it. Check for grammar correctness, adjust the tone and formatting to match the user's custom style profile, and align it with any specific query request.
 
 USER STYLE PROFILE:
+- User's Name: {user_name}
 - Tone: {tone}
 - Signature: {signature}
 - Formatting Style: {formatting}
@@ -116,6 +118,7 @@ Rules:
 - Correct all grammatical errors.
 - Make sure it sounds natural and adheres strictly to the user style profile.
 - Respect any specific instructions/query requests.
+- Do not write placeholders like "[My Name]" or "[Your Name]". Sign off using the user's signature (which is {signature}) and/or the user's actual name: {user_name}.
 - Output only the final generated email subject and body in the following structure.
 
 Format:
@@ -125,7 +128,7 @@ Body:
 """
 
 PROACTIVE_REACTION_PROMPT = """
-You are a Proactive Action Agent.
+You are a Proactive Action Agent representing the user {user_name}.
 Analyze the user's current health alerts and latest vitals to suggest actionable recommendations (such as drafting an email to a doctor, setting calendar blocks for exercise or rest, or sending reminders).
 
 Current Reference Time: {current_time}
@@ -170,7 +173,7 @@ Expected JSON format:
   {{
     "style_name": "Name of the style (e.g., professional, casual, concise)",
     "tone": "Description of the tone (e.g. formal and polite, relaxed and friendly)",
-    "signature": "Typical signature used in this style (e.g., Best regards, [Your Name] or Cheers)",
+    "signature": "Typical signature used in this style (e.g., Best regards, [your name] or Cheers)",
     "formatting": "Formatting details (e.g. structured paragraphs, bullet points, one-liners)",
     "recurring_phrases": ["phrase 1", "phrase 2", ...]
   }}

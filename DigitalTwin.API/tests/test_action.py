@@ -29,6 +29,10 @@ def test_action_repo_crud():
         repo = ActionRepository()
         user_id = "test_user_123"
 
+        # Clean up any existing style profiles for this test user
+        db = mongo.get_db()
+        await db[Collections.ACTION_STYLE_PROFILES].delete_many({"user_id": user_id})
+
         # 1. Test Style Profile
         style = {
             "tone": "enthusiastic",
@@ -107,6 +111,10 @@ def test_email_tool_drafting():
         user_id = "test_user_123"
         repo = ActionRepository()
         
+        # Clean up any existing style profiles for this test user
+        db = mongo.get_db()
+        await db[Collections.ACTION_STYLE_PROFILES].delete_many({"user_id": user_id})
+
         # Save a custom style profile
         style = {
             "tone": "casual and friendly",

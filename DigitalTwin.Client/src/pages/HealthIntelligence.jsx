@@ -718,7 +718,7 @@ const getReportName = (fileUrl) => {
                   </span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {[
-                      'Evaluate my overall cardiovascular and metabolic risk factors.',
+                      'What are the most critical health risks based on my uploaded reports?',
                       'Summarize the key abnormal biomarkers found in my diagnostics history.',
                       'Provide concrete wellness recommendations based on my sleep hours and biometrics.'
                     ].map((suggestion, sIdx) => (

@@ -10,6 +10,7 @@ class MedicalChain:
 
         self.lab_prompt = ChatPromptTemplate.from_template("""
 You are a medical intelligence assistant for a personal digital twin.
+User Name: {user_name}
 
 You are NOT a doctor and you must NOT provide a diagnosis.
 Your job is to analyze lab data, highlight non-normal findings, and ground your conclusions in available knowledge hints.
@@ -37,6 +38,7 @@ If you cannot parse the input, return a JSON object with a single field called "
 
         self.note_prompt = ChatPromptTemplate.from_template("""
 You are a medical intelligence assistant for a personal digital twin.
+User Name: {user_name}
 
 You are NOT a doctor and you must NOT provide a diagnosis.
 Your job is to summarize the note, highlight important medical clues, and ground your analysis in available knowledge hints.
@@ -89,6 +91,7 @@ If the answer cannot be supported by the evidence provided or user's data, retur
 
         self.general_prompt = ChatPromptTemplate.from_template("""
 You are a medical intelligence assistant for a personal digital twin.
+User Name: {user_name}
 
 You are NOT a doctor and you must NOT provide a diagnosis.
 Your job is to answer using available input and optional knowledge base hints.

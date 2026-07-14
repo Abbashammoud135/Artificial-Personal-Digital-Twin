@@ -3,7 +3,7 @@ import urllib.parse
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from typing import List, Dict, Any, Optional
-from core.dependencies import get_current_user
+from core.dependencies import get_current_user, get_auth_service
 from agents.action.agent import ActionAgent
 from agents.action.schema import (
     ActionIntent,
@@ -378,7 +378,8 @@ async def delete_calendar_event(
 
 @router.get("/style-profile", status_code=status.HTTP_200_OK)
 async def get_user_style_profile(
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
+    auth_service = Depends(get_auth_service)
 ):
     """
     Fetch the user's manually-defined email writing style profile (tone, signature, formatting).
@@ -389,12 +390,13 @@ async def get_user_style_profile(
     try:
         profile = await action_agent.impl.action_repo.get_style_profile(user_id)
         if not profile:
+            user_name = auth_service.get_user_fullname(user_id)
             # Return empty/default template rather than 404 so UI can display it
             return {
                 "tone": "neutral",
-                "signature": "",
+                "signature": f"\nBest regards,\n{user_name}",
                 "formatting": "paragraphs",
-                "recurring_phrases": ["kind Regards,\n Abbas Hammoud"]
+                "recurring_phrases": [f"kind Regards,\n {user_name}"]
             }
         return profile
     except Exception as e:

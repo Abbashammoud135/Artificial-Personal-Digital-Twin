@@ -37,6 +37,28 @@ class EmailTool:
             }
         ]
 
+    def get_user_name(self, user_id: str) -> str:
+        try:
+            from database.sqlserver.connection import sql_db
+            from database.sqlserver.repositories.user_repo import UserRepository
+            if not sql_db.engine:
+                sql_db.connect()
+            session = sql_db.get_session()
+            try:
+                user_repo = UserRepository(session)
+                try:
+                    uid = int(user_id)
+                except ValueError:
+                    return "User"
+                user = user_repo.get_by_id(uid)
+                if user and user.full_name:
+                    return user.full_name
+            finally:
+                session.close()
+        except Exception as e:
+            print(f"Error fetching user name for user {user_id}: {e}")
+        return "User"
+
     # -------------------------
     # READ INBOX
     # -------------------------
@@ -75,6 +97,7 @@ class EmailTool:
     # DRAFT EMAIL (LLM-BASED WITH STYLE SIMULATION)
     # -------------------------
     async def draft_email(self, user_id: str, to: str, topic: str, message_details: str, style_profile_override: dict = None, style_name: str = None) -> dict:
+        user_name = self.get_user_name(user_id)
         # 1. Fetch style profile
         profile = style_profile_override
         if not profile:
@@ -83,13 +106,14 @@ class EmailTool:
             # Fallback default profile
             profile = {
                 "tone": style_name or "neutral",
-                "signature": "\nBest regards,\nAbbas Hammoud",
+                "signature": f"\nBest regards,\n{user_name}",
                 "formatting": "paragraphs",
                 "recurring_phrases": []
             }
 
         # 2. Render prompt
         prompt = EMAIL_DRAFTING_PROMPT.format(
+            user_name=user_name,
             tone=profile.get("tone", "neutral"),
             signature=profile.get("signature", ""),
             formatting=profile.get("formatting", "paragraphs"),
@@ -198,12 +222,13 @@ class EmailTool:
         query_request: str = None,
         style_name: str = None
     ) -> dict:
+        user_name = self.get_user_name(user_id)
         # 1. Fetch style profile
         profile = await self.repo.get_style_profile(user_id, style_name)
         if not profile:
             profile = {
                 "tone": style_name or "neutral",
-                "signature": "\nBest regards,\nAbbas Hammoud",
+                "signature": f"\nBest regards,\n{user_name}",
                 "formatting": "paragraphs",
                 "recurring_phrases": []
             }
@@ -212,6 +237,7 @@ class EmailTool:
         # 2. Render prompt
         from agents.action.prompts import EMAIL_ENHANCEMENT_PROMPT
         prompt = EMAIL_ENHANCEMENT_PROMPT.format(
+            user_name=user_name,
             tone=profile.get("tone", "neutral"),
             signature=profile.get("signature", ""),
             formatting=profile.get("formatting", "paragraphs"),
@@ -239,6 +265,7 @@ class EmailTool:
         return await self.repo.list_email_drafts(user_id)
 
     async def generate_style_profiles_from_sent(self, user_id: str) -> list:
+        user_name = self.get_user_name(user_id)
         # 1. Fetch sent emails
         sent_emails = await self.repo.list_sent_emails(user_id)
         
@@ -249,14 +276,14 @@ class EmailTool:
                 {
                     "style_name": "professional",
                     "tone": "formal, professional and polite",
-                    "signature": "\nBest regards,\nAbbas Hammoud",
+                    "signature": f"\nBest regards,\n{user_name}",
                     "formatting": "paragraphs",
                     "recurring_phrases": ["Please find attached", "Let me know if you need anything else", "Thank you for your time"]
                 },
                 {
                     "style_name": "casual",
                     "tone": "friendly, warm and casual",
-                    "signature": "\nCheers,\nAbbas Hammoud",
+                    "signature": f"\nCheers,\n{user_name}",
                     "formatting": "paragraphs",
                     "recurring_phrases": ["hope you're doing well", "talk soon", "catch you later"]
                 },
@@ -318,7 +345,7 @@ class EmailTool:
                 {
                     "style_name": "learned_style",
                     "tone": "neutral and direct",
-                    "signature": "\nBest regards,\nAbbas Hammoud",
+                    "signature": f"\nBest regards,\n{user_name}",
                     "formatting": "paragraphs",
                     "recurring_phrases": []
                 }

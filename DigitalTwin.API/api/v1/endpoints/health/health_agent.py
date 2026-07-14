@@ -105,9 +105,9 @@ class AnalysisInput(BaseModel):
     question: str
     chat_history: List[dict] = []
     
-def build_prompt(payload: AnalysisInput):
+def build_prompt(payload: AnalysisInput, user_name: str):
     return f"""
-You are a medical AI assistant.
+You are a medical AI assistant representing the user {user_name}.
 
 You must answer the user's question using ONLY the provided medical context.
 
@@ -145,9 +145,14 @@ Start answering immediately.
 """
 
 @router.post("/analyze/stream")
-async def analyze_stream(payload: AnalysisInput):
+async def analyze_stream(
+    payload: AnalysisInput,
+    user=Depends(get_current_user),
+    auth_service=Depends(get_auth_service)
+):
 
-    prompt = build_prompt(payload)
+    user_name = auth_service.get_user_fullname(user["user_id"])
+    prompt = build_prompt(payload, user_name)
     llm = get_llm()
     print(f"------Start of payload Generated prompt for LLM:\n{payload}\n--- End of payload ---")
 

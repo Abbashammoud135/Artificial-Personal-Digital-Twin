@@ -447,7 +447,12 @@ class ActionImplementation:
             health_context = "\n".join(context_parts)
         print("Constructed health context:", health_context)
         # 4. Invoke LLM to suggest actions
-        prompt = PROACTIVE_REACTION_PROMPT.format(current_time=datetime.now().isoformat(), health_context=health_context)
+        user_name = self.email_tool.get_user_name(user_id)
+        prompt = PROACTIVE_REACTION_PROMPT.format(
+            user_name=user_name,
+            current_time=datetime.now().isoformat(),
+            health_context=health_context
+        )
         response = self.llm.invoke(prompt)
         response_text = response.content if hasattr(response, 'content') else str(response)
 
